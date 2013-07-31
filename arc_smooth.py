@@ -107,7 +107,7 @@ def parse_shp_type(shp_fp, cfg=None):
     logging.debug("Inside func:parse_shp_type")
     # Here are the regular expressions
     oil_patt_regex = 'surf|shor|entr|arom'
-    map_patt_regex = 'prob|time|zone|dose'
+    map_patt_regex = 'prob|time|zone|dose|max'
     # Choose the filename portion of the filepath
     filename = os.path.split(shp_fp)[1]
     # Parse the oil type
@@ -647,7 +647,6 @@ def get_main_func(call_mode):
     return func_dict[call_mode]
 
 def main(cmd_args):
-#    pdb.set_trace()
     # 1. Determine if calling a gui, a file or a string
     call_mode = parse_cmd_args(cmd_args)
     # 2. Call appropriate func
