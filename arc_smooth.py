@@ -16,6 +16,7 @@ import itertools
 import json
 import multiprocessing
 import os
+import pdb
 import re
 import shutil
 import sys
@@ -126,7 +127,7 @@ def parse_shp_type(shp_fp, cfg=None):
         map_str = map_.group().lower()
     else:
         err_str = "There are appears to be no match for the regex: {} in the string {}".format(
-                oil_patt_regex, filename)
+                map_patt_regex, filename)
         raise ValueError(err_str)
     _type = "_".join([oil_str, map_str])
     logging.debug("_type is {}".format(_type))
@@ -646,6 +647,7 @@ def get_main_func(call_mode):
     return func_dict[call_mode]
 
 def main(cmd_args):
+#    pdb.set_trace()
     # 1. Determine if calling a gui, a file or a string
     call_mode = parse_cmd_args(cmd_args)
     # 2. Call appropriate func
