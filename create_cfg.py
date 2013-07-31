@@ -12,11 +12,11 @@ from collections import OrderedDict
 def default_config():
     cfg = OrderedDict([("user", OrderedDict([
                ("_comment",  "These are the variables you must enter"),
-               ("directory",  r"C:\Users\gcoombes\src\python\apasa\torres\to_process"),
+               ("directory",  r"G:\torres\to_process"),
 #               ("buffer_value_array_km", [1, 5, 10, 50, 100]),
                ("out_suffix", "_b{buf_val}km_sm.shp"),
                ("buffer_value_array_km" , [10]),
-               ("out_dir", "./out"),
+               ("out_dir", r"G:\torres\out"),
                ])),
           ("config", OrderedDict([
               ("_comment", "These are the values you can tweak, but should be ok left as is"),

@@ -39,25 +39,25 @@ from guidata.dataset.dataitems import (IntItem, DirectoryItem, FloatArrayItem,
 #                    format="%(asctime)s:%(levelname)s: %(message)s")
 logging.basicConfig(level=logging.WARNING,
                     format="%(asctime)s:%(levelname)s: %(message)s")
-                
+
 def db(msg):
     logging.debug(msg)
-    
+
 def info(msg):
     logging.info(msg)
-                
+
 def must_process(shp_fp):
     """Predicate - should this file be processed?
     Also check shp_fp is a full path and exists
     Args:
-        shp_fp: <str> complete path to a shapefile     
+        shp_fp: <str> complete path to a shapefile
     Returns:
        <bool> True if this file needs smoothing
     """
     logging.debug("Shapefile is {}".format(shp_fp))
     is_full_path = os.path.isabs(shp_fp)
     is_file = os.path.isfile(shp_fp)
-    is_shape = os.path.splitext(shp_fp)[1] == '.shp' 
+    is_shape = os.path.splitext(shp_fp)[1] == '.shp'
     not_smoothed = "_sm" not in os.path.split(shp_fp)[1]
     return all([is_full_path, is_file, is_shape, not_smoothed])
 
@@ -92,18 +92,18 @@ def parse_shp_type(shp_fp, cfg=None):
     """
     Args:
         shp_fp: <str> Absolute path
-        
+
     Returns:
         _type: <str> Code to choose the type of processing required for each file
-        
+
     For example:
         'surf_zone': 'Surface_Exposure_Zones'
-        'entr_prob': 'Entrained_Exposure_Probability'        
+        'entr_prob': 'Entrained_Exposure_Probability'
     _type has two elements
     (1) the oil_type - surface, shoreline, entrained, aromatic
     (2) the map type - probability, time, zone
     """
-    logging.debug("Inside func:parse_shp_type")    
+    logging.debug("Inside func:parse_shp_type")
     # Here are the regular expressions
     oil_patt_regex = 'surf|shor|entr|arom'
     map_patt_regex = 'prob|time|zone|dose'
@@ -127,14 +127,14 @@ def parse_shp_type(shp_fp, cfg=None):
     else:
         err_str = "There are appears to be no match for the regex: {} in the string {}".format(
                 oil_patt_regex, filename)
-        raise ValueError(err_str)        
-    _type = "_".join([oil_str, map_str])   
-    logging.debug("_type is {}".format(_type))    
+        raise ValueError(err_str)
+    _type = "_".join([oil_str, map_str])
+    logging.debug("_type is {}".format(_type))
     return _type
-    
+
 
 def calculate_key(record, _type, prop_key, cuts):
-    log = lambda s: debug("calculate_key: {}".format(s))
+    log = lambda s: db("calculate_key: {}".format(s))
     PROPORTION_TO_PERCENTAGE = 100    ### STATE
     KG_M2_TO_G_M2 = 1000              ### STATE
     prob = record['properties'][prop_key]
@@ -146,7 +146,7 @@ def calculate_key(record, _type, prop_key, cuts):
     # Discarding value below first threshold for zones
     if _type in ['surf_zone', 'entr_zone', 'arom_zone']:
         if prob < cuts[1]:
-            prob = 0  
+            prob = 0
     if _type == 'surf_time':
         first_cut_func = first_cut_forwards
     else:
@@ -154,14 +154,14 @@ def calculate_key(record, _type, prop_key, cuts):
 
     first_cut = first_cut_func(prob, cuts)
     db("First cut is {}".format(first_cut))
-    return first_cut 
+    return first_cut
 
 def first_cut_backwards(prob, cuts):
     return next(dropwhile(lambda cut: cut > prob, cuts[::-1]))
 
 def first_cut_forwards(prob, cuts):
     return next(dropwhile(lambda cut: cut <= prob, cuts))
-    
+
 def add_key_field(shp_coll, _type, cfg=None):
     """Add key for each polygon eg 5 for surf_prob.
     *Mutation of shp_coll*
@@ -177,21 +177,21 @@ def add_key_field(shp_coll, _type, cfg=None):
             _type    : <str>
     """
     log = lambda s: db("add_key_field: {}".format(s))
-    logging.debug("Inside func:add_key_field")    
+    logging.debug("Inside func:add_key_field")
 
-    
+
     prop_dict = cfg['config']['prop_dict']
     assert isinstance(prop_dict, dict)
-    cuts_dict = cfg['config']['cuts_dict']  
+    cuts_dict = cfg['config']['cuts_dict']
     assert isinstance(cuts_dict, dict)
-                    
+
     prop_key = prop_dict[_type]
     cuts = cuts_dict[_type]
 
-    log("_type is {}".format(_type))  
+    log("_type is {}".format(_type))
     log("prop_key is {}".format(prop_key))
     log("cuts are {}".format(cuts))
-    
+
     coll_ls = []
     for record in shp_coll:
         key = calculate_key(record, _type, prop_key, cuts)
@@ -213,7 +213,7 @@ def sort_and_partition(rec_list, cfg=None):
         <dict: key: key, value: <list: of records>>
         A list of layers, each partitioned by key
     """
-    logging.debug("Inside func:sort_and_partition")      
+    logging.debug("Inside func:sort_and_partition")
     def key_func(elem):
         return elem['properties']['key']
 
@@ -242,7 +242,7 @@ def smooth_layers_dict(layers_dict, buf_val=5, cfg=None):
         smoothed_dict[key] = smooth_layer(layers_dict[key], buf_val, cfg=cfg)
     return smoothed_dict
 
-def smooth_layer(record_ls, buf_val, 
+def smooth_layer(record_ls, buf_val,
                  scale_km_to_degrees=0.009, delta_km=-0.5,     ### STATE
                  cfg=None):
     """Buffer out, dissolve and buffer back
@@ -309,8 +309,8 @@ def clip_layers(smoothed_dict, _type, cfg=None):
         inner_keys.append(keys[i])
         next_key = keys[i+1]
         assert isinstance(smoothed_dict[next_key], MultiPolygon)
-        clipped_layer = smoothed_dict[next_key]    
-        for key in inner_keys:        
+        clipped_layer = smoothed_dict[next_key]
+        for key in inner_keys:
             clipped_layer = clipped_layer.difference(smoothed_dict[key])
         clipped_dict[next_key] = clipped_layer
     clipped_dict[keys[0]] = smoothed_dict[keys[0]]
@@ -324,18 +324,18 @@ def make_record(polygon, key, key_str, scale, _type):
     record = base_record.copy()
     record['geometry'] = mapping(polygon)
     new_val = float(key*scale)
-    record['properties'].update({key_str: new_val, '_type': _type})                              
+    record['properties'].update({key_str: new_val, '_type': _type})
     return record
-        
+
 def write_layers(clipped_dict, new_fp, _type, schema=None, cfg=None):
     """Write to new shapefile"""
-#    logging.debug("Inside func:write_layers")  
-    log = lambda s: info("write_layers: {}".format(s))  
-    logging.info("Inside func:write_layers")     
+#    logging.debug("Inside func:write_layers")
+    log = lambda s: info("write_layers: {}".format(s))
+    logging.info("Inside func:write_layers")
     key_str_dict = cfg['config']['key_str_dict']
-    schema_dict = cfg['config']['schema_dict'] 
+    schema_dict = cfg['config']['schema_dict']
     out_key_str_dict = cfg['config']['out_key_str_dict']
-                         
+
     if schema is None:
         db("Setting schema")
         schema = schema_dict[_type]
@@ -365,12 +365,12 @@ def write_layers(clipped_dict, new_fp, _type, schema=None, cfg=None):
             elif isinstance(layer, MultiPolygon):
                 for polygon in layer.geoms:
                     record = make_record(polygon, key, key_str, scale, _type)
-                    sink.write(record)     
+                    sink.write(record)
         sink.close()
-       
+
 def choose_n_procs(cfg):
     return cfg['system']['n_procs']
-       
+
 def default_config():
     cfg = OrderedDict([("user", OrderedDict([
                ("_comment",  "These are the variables you must enter"),
@@ -385,15 +385,15 @@ def default_config():
                   "_comment": """Each cut value represents the maximum contained in the produced layer. For zone data, the first non-zero cut is discarded""",
                   'surf_prob' : [0, 5, 10, 25, 50, 75, 100],
                   'shor_prob' : [0, 5, 10, 25, 50, 75, 100],
-                  'surf_time' : [0, 1, 6, 12, 24, 48, 120, 240, 480, 960, 1440, 1920, 2400, 2520, 10**9],                             
+                  'surf_time' : [0, 1, 6, 12, 24, 48, 120, 240, 480, 960, 1440, 1920, 2400, 2520, 10**9],
                   'surf_zone' : [0, 1, 10, 25, 10**9],
                   'entr_prob' : [0, 5, 10, 25, 50, 75, 100],
-                  'entr_zone' : [0, 11520, 33600, 338400, 3859200, 10**9], 
+                  'entr_zone' : [0, 11520, 33600, 338400, 3859200, 10**9],
                   'arom_prob' : [0, 5, 10, 25, 50, 75, 100],
                   'arom_zone' : [0, 576, 4800, 38400, 10**9]
                   }),
               ("prop_dict", OrderedDict([
-                     ('_comment', "These map the internal _type to incoming layer property name"),             
+                     ('_comment', "These map the internal _type to incoming layer property name"),
                      ('surf_prob', 'concprob'),
                      ('shor_prob', 'shoreprob'),
                      ('surf_time', 'surfthresht'),
@@ -404,7 +404,7 @@ def default_config():
                      ('arom_zone', 'arommaxdose'),
                      ])),
               ("key_str_dict", OrderedDict([
-                     ('_comment', "These map the internal _type to outgoing layer property name"),             
+                     ('_comment', "These map the internal _type to outgoing layer property name"),
                      ('surf_prob', 'concprob'),
                      ('shor_prob', 'shoreprob'),
                      ('surf_time', 'surfthresht'),
@@ -413,9 +413,9 @@ def default_config():
                      ('entr_zone', 'wcmaxdose'),
                      ('arom_prob', 'aromdosepro'),
                      ('arom_zone', 'arommaxdose'),
-                     ])),  
+                     ])),
               ("out_key_str_dict", OrderedDict([
-                     ('_comment', "These map the internal _type to outgoing layer property name"),             
+                     ('_comment', "These map the internal _type to outgoing layer property name"),
                      ('surf_prob', 'concprob'),
                      ('shor_prob', 'shoreprob'),
                      ('surf_time', 'surfthresh'),
@@ -424,7 +424,7 @@ def default_config():
                      ('entr_zone', 'wcmaxdose'),
                      ('arom_prob', 'aromdosepr'),
                      ('arom_zone', 'arommaxdos'),
-                     ])),                      
+                     ])),
               ("schema_dict", OrderedDict([
                      ('_comment', 'This describes the schema of the ESRI shapefile'),
                      ('surf_prob', {'geometry':'Polygon','properties': {'concprob': 'float','_type': 'str'}}),
@@ -439,25 +439,25 @@ def default_config():
                 ])),
           ("system", OrderedDict([
               ("_comment", "This for meta-setup details"),
-              ("n_procs", 1),      
+              ("n_procs", 1),
             ])
           )])
     return cfg
-       
+
 def copy_prj_file(fp, new_fp):
     """Copy the prj file and save with new filename"""
     old_prj = os.path.splitext(fp)[0] + ".prj"
     new_prj = os.path.splitext(new_fp)[0] + ".prj"
-    if os.path.isfile(old_prj):        
+    if os.path.isfile(old_prj):
         shutil.copy(old_prj, new_prj)
         logging.debug("Copying from {} to {}".format(old_prj, new_prj))
     else:
         logging.info("No prj file found -{}".format(old_prj))
     return None
-       
+
 def run_job(fp, buf_val, cfg):
     """
-    
+
     Called by func: send_multiprocessing
     Args:
         fp: Absolute path to the shape file for processing
@@ -466,7 +466,7 @@ def run_job(fp, buf_val, cfg):
     Returns: None
     """
     logging.debug("Inside func:run_job")
-    
+
     suffix = cfg['user']['out_suffix']
     out_dir = cfg['user']['out_dir']
     print("out_dir is {}".format(out_dir))
@@ -484,17 +484,17 @@ def run_job(fp, buf_val, cfg):
     clipped_dict = clip_layers(smoothed_dict, _type, cfg=cfg)
     write_layers(clipped_dict, new_fp, _type, cfg=cfg)
     copy_prj_file(fp, new_fp)
-    return new_fp 
+    return new_fp
 
 def send_multiprocessing(cfg):
-    filenames = list(shp_files(cfg['user']['directory']))  
+    filenames = list(shp_files(cfg['user']['directory']))
     logging.info("Filenames are {}".format(map(str,filenames)))
-    logging.info("Number of files for processing is {}".format(len(filenames)))      
+    logging.info("Number of files for processing is {}".format(len(filenames)))
     buf_vals = cfg['user']['buffer_value_array_km']
     job_arg_ls = list(itertools.product(filenames, buf_vals, [cfg]))
     n_procs = cfg['system']['n_procs']
-    pool = multiprocessing.Pool(n_procs)  
-    start = time.time()  
+    pool = multiprocessing.Pool(n_procs)
+    start = time.time()
     for job_args in job_arg_ls:
 #        print("Job args are {}".format(job_args))
         pool.apply_async(run_job, job_args)
@@ -504,31 +504,31 @@ def send_multiprocessing(cfg):
     n_jobs = len(job_arg_ls)
     elapsed_time_min = (time.time() - start) / 60
     return (n_jobs, elapsed_time_min, n_procs)
-    
+
 def send_single_job(cfg):
-    filenames = list(shp_files(cfg['user']['directory']))  
+    filenames = list(shp_files(cfg['user']['directory']))
     logging.info("Filenames are {}".format(map(str,filenames)))
-    logging.info("Number of files for processing is {}".format(len(filenames)))      
+    logging.info("Number of files for processing is {}".format(len(filenames)))
     buf_vals = cfg['user']['buffer_value_array_km']
-    job_arg_ls = list(itertools.product(filenames, buf_vals, [cfg]))    
-    start = time.time() 
+    job_arg_ls = list(itertools.product(filenames, buf_vals, [cfg]))
+    start = time.time()
     f, b, c = job_arg_ls[0]
     print(b)
     print(type(b))
     assert isinstance(b, (float, int))
-    run_job(*job_arg_ls[0]) 
-    n_jobs = len(buf_vals)    
+    run_job(*job_arg_ls[0])
+    n_jobs = len(buf_vals)
     elapsed_time_min = (time.time() - start) / 60
-    n_procs = 1    
+    n_procs = 1
     return (n_jobs, elapsed_time_min, n_procs)
-    
+
 def mock_job(fp, buf_val):
     time.sleep(1)
     new_fn = os.path.splitext(fp)[0] + "b{}_sm.shp".format(buf_val)
-    print("New filename is {}\n".format(os.path.split(new_fn)[1]))        
+    print("New filename is {}\n".format(os.path.split(new_fn)[1]))
 
 def parse_cmd_args(cmd_args):
-    """Determine if calling a gui, a file or a string""" 
+    """Determine if calling a gui, a file or a string"""
     logging.debug("Command args are {}".format(cmd_args))
     if cmd_args:
         first = cmd_args[0]
@@ -547,23 +547,23 @@ def parse_cmd_args(cmd_args):
     else:
         call_mode = 'gui'
     return call_mode
-                
-def get_main_func(call_mode):   
+
+def get_main_func(call_mode):
     def json_str_func(args):
         json_str = args[0]
         cfg = json.loads(json_str)
         success = send_multiprocessing(cfg)
-#        success = send_single_job(cfg)            
-        return (success, cfg)                  
-    
+#        success = send_single_job(cfg)
+        return (success, cfg)
+
     def json_file_func(args):
         json_fp = args[0]
         with open(json_fp, "r") as fh:
             cfg = json.loads(fh.read())
 #        success = send_multiprocessing(cfg)
-        success = send_single_job(cfg)            
-        return (success, cfg)           
-    
+        success = send_single_job(cfg)
+        return (success, cfg)
+
     def ini_file_func(args):
         ini_fp = args[0]
         config = ConfigParser.SafeConfigParser()
@@ -584,14 +584,14 @@ def get_main_func(call_mode):
         assert isinstance(cfg['config']['key_str_dict'], dict)
         assert isinstance(cfg['config']['schema_dict'], dict)
 #        success = send_multiprocessing(cfg)
-        success = send_single_job(cfg)            
+        success = send_single_job(cfg)
         return (success. cfg)
-    
-    def gui_func(args, cfg=None):      
+
+    def gui_func(args, cfg=None):
         class Processing(DataSet):
             """Arc Smooth"""
             # Set the starting value with the config file if given
-            if cfg:                
+            if cfg:
                 _dir = DirectoryItem("Shapefile Directory", cfg['user']['directory'])
                 out_suffix = StringItem("Smoothed files suffix", cfg['user']['out_suffix'])
                 out_dir = DirectoryItem("Output Directory", cfg['user']['out_dir'])
@@ -599,8 +599,8 @@ def get_main_func(call_mode):
                                                default=cfg['user']['buffer_value_array_km'],
                                                help="Units [km]",
                                                transpose=True)
-                n_procs = IntItem("Number of Processors", min=0, max=10, default=cfg['system']['n_procs'])                
-            else:    
+                n_procs = IntItem("Number of Processors", min=0, max=10, default=cfg['system']['n_procs'])
+            else:
                 start_dir = os.getcwd()
                 _dir = DirectoryItem("Shapefile Directory", start_dir)
                 out_suffix = StringItem("Smoothed files suffix", "_b{buf_val}km_sm.shp")
@@ -611,23 +611,23 @@ def get_main_func(call_mode):
                                                help="Units [km]",
                                                transpose=True)
                 n_procs = IntItem("Number of Processors", min=0, max=10, default=4)
-                
-        app = QApplication([])      
+
+        app = QApplication([])
         param = Processing()
         if param.edit(size=(600, 300)):
-            cfg = default_config() 
+            cfg = default_config()
             param = remove_sentinel_buf_vals(param)
             cfg['user']['directory'] = param._dir
             cfg['user']['buffer_value_array_km'] = param.buf_val_array
             cfg['user']['out_suffix'] = param.out_suffix
-            cfg['system']['n_procs'] = param.n_procs 
+            cfg['system']['n_procs'] = param.n_procs
             cfg['user']['out_dir'] = param.out_dir
 #            success = send_multiprocessing(cfg)
             success = send_single_job(cfg)
             return (success, cfg)
         else:
-            return None 
-            
+            return None
+
     def remove_sentinel_buf_vals(param):
         tmp_ls = []
         SENTINEL = -1
@@ -636,18 +636,18 @@ def get_main_func(call_mode):
                 tmp_ls.append(elem)
         logging.debug("Are the -1 removed?: {}".format(tmp_ls))
         param.buf_val_array = tmp_ls
-        return param    
-        
+        return param
+
     func_dict = {'json_str': json_str_func,
                  'json_file': json_file_func,
                  'ini_file': ini_file_func,
-                 'gui': gui_func }        
+                 'gui': gui_func }
     # Return the function that main will call
-    return func_dict[call_mode] 
-        
-def main(cmd_args):      
+    return func_dict[call_mode]
+
+def main(cmd_args):
     # 1. Determine if calling a gui, a file or a string
-    call_mode = parse_cmd_args(cmd_args) 
+    call_mode = parse_cmd_args(cmd_args)
     # 2. Call appropriate func
     main_func = get_main_func(call_mode)
     # 3 Exit with success or cancel
@@ -655,25 +655,25 @@ def main(cmd_args):
     print("main_func_name is {}".format(main_func.__name__))
     if main_func.__name__ == "gui_func":
         cfg = None
-        while success:        
+        while success:
             success, cfg = main_func(cmd_args, cfg)
             if success:
                 n_jobs, elapsed_time_min, n_procs = success
                 print("{} shapefiles created in {:.1f} minutes with {} processors".format(
-                    n_jobs, elapsed_time_min, n_procs))     
+                    n_jobs, elapsed_time_min, n_procs))
     else:
         success, cfg = main_func(cmd_args)
         if success:
             n_jobs, elapsed_time_min, n_procs = success
             print("{} shapefiles created in {:.1f} minutes with {} processors".format(
                 n_jobs, elapsed_time_min, n_procs))
-            
+
     return None
-    
+
 if __name__ == "__main__":
-    
-    main(sys.argv[1:])
+
+#    main(sys.argv[1:])
 #    main(['..\apasa_src\arc_smooth\test_config.ini'])
-#    main([r'test_config.json'])
-    
+    main([r'test_config.json'])
+
     print('Done')
