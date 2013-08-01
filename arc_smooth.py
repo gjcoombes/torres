@@ -16,6 +16,7 @@ import itertools
 import json
 import multiprocessing
 import os
+import pdb
 import re
 import shutil
 import sys
@@ -106,7 +107,7 @@ def parse_shp_type(shp_fp, cfg=None):
     logging.debug("Inside func:parse_shp_type")
     # Here are the regular expressions
     oil_patt_regex = 'surf|shor|entr|arom'
-    map_patt_regex = 'prob|time|zone|dose'
+    map_patt_regex = 'prob|time|zone|dose|max'
     # Choose the filename portion of the filepath
     filename = os.path.split(shp_fp)[1]
     # Parse the oil type
@@ -126,7 +127,7 @@ def parse_shp_type(shp_fp, cfg=None):
         map_str = map_.group().lower()
     else:
         err_str = "There are appears to be no match for the regex: {} in the string {}".format(
-                oil_patt_regex, filename)
+                map_patt_regex, filename)
         raise ValueError(err_str)
     _type = "_".join([oil_str, map_str])
     logging.debug("_type is {}".format(_type))
@@ -295,7 +296,7 @@ def clip_layers(smoothed_dict, _type, cfg=None):
     log("_type is {}".format(_type))
     if _type in ['surf_prob', 'entr_prob', 'arom_prob',
                 'surf_zone', 'entr_zone', 'arom_zone',
-                'shor_prob']:
+                'shor_prob', 'shor_max']:
         reversed = True
     elif _type in ['surf_time']:
         reversed = False
