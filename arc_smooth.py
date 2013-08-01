@@ -296,7 +296,7 @@ def clip_layers(smoothed_dict, _type, cfg=None):
     log("_type is {}".format(_type))
     if _type in ['surf_prob', 'entr_prob', 'arom_prob',
                 'surf_zone', 'entr_zone', 'arom_zone',
-                'shor_prob']:
+                'shor_prob', 'shor_max']:
         reversed = True
     elif _type in ['surf_time']:
         reversed = False
