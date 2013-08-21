@@ -35,7 +35,8 @@ def parameter_object(cfg=None):
     if cfg is None:
         _out_dir = _start_dir = os.getcwd()
         _out_suffix = "_b{buf_val}km_sm.shp"
-        _buf_val_array = np.array([10])
+        _buf_val_array = np.array([1, 5, 10, 50, 100]),
+#        _buf_val_array = np.array([10])
         _n_procs = 4
     else:
         _start_dir = cfg['user']['directory']
@@ -48,12 +49,26 @@ def parameter_object(cfg=None):
         _dir = DirectoryItem("Shapefile Directory", _start_dir)
         out_suffix = StringItem("Smoothed files suffix", _out_suffix)
         out_dir = DirectoryItem("Output Directory", _out_dir)
+
+        n_procs = IntItem("Number of Processors", min=0, max=10, default=_n_procs)
+        g0 = dt.BeginTabGroup("group")
         buf_val_array = FloatArrayItem("Buffer Values",
                                        default=_buf_val_array,
-  #                                             default=np.array([1, 5, 10, 50, 100]),
                                        help="Units [km]",
                                        transpose=True)
-        n_procs = IntItem("Number of Processors", min=0, max=10, default=_n_procs)
+        mchoice1 = di.MultipleChoiceItem("Smoothing",
+                                      ["first choice", "second choice",
+                                       "third choice"]).vertical(2)
+        mchoice2 = di.ImageChoiceItem("Thresholds",
+                                   [("rect", "first choice", "gif.png" ),
+                                    ("ell", "second choice", "txt.png" ),
+                                    ("qcq", "third choice", "file.png" )]
+                                   ).set_pos(col=1) \
+                                    .set_prop("display", icon="file.png")
+        mchoice3 = di.MultipleChoiceItem("MC type 3",
+                                      [ str(i) for i in range(10)] ).horizontal(2)
+        eg0 = dt.EndTabGroup("group")
+
 
     return Processing()
 
@@ -99,7 +114,8 @@ class Processing2(dt.DataSet):
 ### Tests
 
 if __name__ == "__main__":
-
+    from torres.main import main
+    main(sys.argv)
 
 
     print("Done __main__")
