@@ -1,0 +1,4 @@
+nose
+sphinx
+fiona
+shapely

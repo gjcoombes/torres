@@ -22,14 +22,14 @@ def default_config():
               ("_comment", "These are the values you can tweak, but should be ok left as is"),
               ("cuts_dict", {
                   "_comment": """Each cut value represents the maximum contained in the produced layer. For zone data, the first non-zero cut is discarded""",
-                  'surf_prob' : [0, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-                  'shor_prob' : [0, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+                  'surf_prob' : [0, 5, 10, 25, 50, 75, 101],
+                  'shor_prob' : [0, 5, 10, 25, 50, 75, 101],
                   'shor_max'  : [0, 1, 10, 25, 10**9],
                   'surf_time' : [0, 1, 6, 12, 24, 48, 120, 240, 360, 480, 600, 720, 960, 1440, 1920, 2352, 5000],
                   'surf_zone' : [0, 1, 10, 25, 10**9],
-                  'entr_prob' : [0, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-                  'entr_zone' : [0, 960, 9600, 48000, 10**9],
-                  'arom_prob' : [0, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+                  'entr_prob' : [0, 5, 10, 25, 50, 75, 101],
+                  'entr_zone' : [0, 11520, 33600, 338400, 3859200, 10**9],
+                  'arom_prob' : [0, 5, 10, 25, 50, 75, 101],
                   'arom_zone' : [0, 576, 4800, 38400, 10**9]
                   }),
               ("prop_dict", OrderedDict([
