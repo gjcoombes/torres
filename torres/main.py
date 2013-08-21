@@ -35,8 +35,6 @@ func_dict = {
 ### Classes
 
 ### Functions
-
-
 def parse_cmd_args(cmd_args):
     """Determine if calling a gui, a file or a string"""
     logging.debug("Command args are {}".format(cmd_args))
