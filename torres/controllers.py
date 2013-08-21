@@ -13,8 +13,10 @@ from __future__ import division
 
 import ConfigParser
 import itertools
+import json
 import multiprocessing
 import os
+import re
 import shutil
 import time
 
@@ -22,7 +24,7 @@ import time
 from fiona import collection
 from PyQt4.QtGui import QApplication
 
-from torres.views import Processing
+from torres.views import parameter_object, Processing2
 from torres.config.defaults import default_config
 
 ### Logging
@@ -37,11 +39,15 @@ debug, info, error = logging.debug, logging.info, logging.error
 
 ### Functions
 def gui(args, cfg=None):
-    return "monkeys"
+    app = QApplication([])
+#    param = Processing2()
+    param = parameter_object()
+    param.edit()
+    return (0, 0)
 
 def gui_func(args, cfg=None):
     app = QApplication([])
-    param = Processing()
+    param = parameter_object()
     if param.edit(size=(600, 300)):
         cfg = default_config()
         param = remove_sentinel_buf_vals(param)

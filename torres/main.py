@@ -30,7 +30,7 @@ func_dict = {
     "dir": None,
     "json_file": None,
     "ini_file": None,
-    "gui": controllers.gui,
+    "gui": controllers.gui_func,
 }
 ### Classes
 
@@ -60,13 +60,14 @@ def main(args):
     args = sys.argv[1:]
     call_mode = parse_cmd_args(args)
     main_func = func_dict[call_mode]
-    main_func(args)
+    success, cfg = main_func(args)
 
 ### Tests
 
 if __name__ == "__main__":
 #    pytest.main()
-    pytest.main([r'..\tests\test_main.py', '--cov-report', 'html', '--cov', '.', '-xvv'])
+#    pytest.main([r'..\tests\test_main.py', '--cov-report', 'html', '--cov', '.', '-xvv'])
     main(sys.argv)
+#    main([r'test_config.json'])
     print("Done __main__")
 

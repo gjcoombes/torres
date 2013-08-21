@@ -12,11 +12,14 @@ from __future__ import print_function
 from __future__ import division
 
 import sys, os
+import numpy as np
 
 from PyQt4.QtGui import QApplication
 from guidata.dataset.datatypes import (DataSet)
 from guidata.dataset.dataitems import (IntItem, DirectoryItem, FloatArrayItem,
                                        StringItem)
+import guidata.dataset.datatypes as dt
+import guidata.dataset.dataitems as di
 
 ### Logging
 import logging
@@ -27,30 +30,40 @@ debug, info, error = logging.debug, logging.info, logging.error
 ### Constants
 
 ### Classes
-class Processing(DataSet):
-    """Arc Smooth"""
-    def __init__(self, cfg=None):
-    # Set the starting value with the config file if given
+def parameter_object(cfg=None):
+    class Processing(DataSet):
+        """Arc Smooth"""
+        # Set the starting value with the config file if given
         if cfg:
-            self._dir = DirectoryItem("Shapefile Directory", cfg['user']['directory'])
-            self.out_suffix = StringItem("Smoothed files suffix", cfg['user']['out_suffix'])
-            self.out_dir = DirectoryItem("Output Directory", cfg['user']['out_dir'])
-            self.buf_val_array = FloatArrayItem("Buffer Values",
+            _dir = DirectoryItem("Shapefile Directory", cfg['user']['directory'])
+            out_suffix = StringItem("Smoothed files suffix", cfg['user']['out_suffix'])
+            out_dir = DirectoryItem("Output Directory", cfg['user']['out_dir'])
+            buf_val_array = FloatArrayItem("Buffer Values",
                                            default=cfg['user']['buffer_value_array_km'],
                                            help="Units [km]",
                                            transpose=True)
-            self.n_procs = IntItem("Number of Processors", min=0, max=10, default=cfg['system']['n_procs'])
+            n_procs = IntItem("Number of Processors", min=0, max=10, default=cfg['system']['n_procs'])
         else:
-            self.start_dir = os.getcwd()
-            self._dir = DirectoryItem("Shapefile Directory", start_dir)
-            self.out_suffix = StringItem("Smoothed files suffix", "_b{buf_val}km_sm.shp")
-            self.out_dir = DirectoryItem("Output Directory", start_dir)
-            self.buf_val_array = FloatArrayItem("Buffer Values",
+            start_dir = os.getcwd()
+            _dir = DirectoryItem("Shapefile Directory", start_dir)
+            out_suffix = StringItem("Smoothed files suffix", "_b{buf_val}km_sm.shp")
+            out_dir = DirectoryItem("Output Directory", start_dir)
+            buf_val_array = FloatArrayItem("Buffer Values",
                                            default=np.array([10]),
       #                                             default=np.array([1, 5, 10, 50, 100]),
                                            help="Units [km]",
                                            transpose=True)
-            self.n_procs = IntItem("Number of Processors", min=0, max=10, default=4)
+            n_procs = IntItem("Number of Processors", min=0, max=10, default=4)
+    return Processing()
+
+class Processing2(dt.DataSet):
+    """Example"""
+    a = di.FloatItem("Parameter #1", default=2.3)
+    b = di.IntItem("Parameter #2", min=0, max=10, default=5)
+    type = di.ChoiceItem("Processing algorithm",
+                         ("type 1", "type 2", "type 3"))
+
+
 
 
 
