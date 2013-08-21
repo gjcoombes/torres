@@ -32,66 +32,56 @@ debug, info, error = logging.debug, logging.info, logging.error
 ### Classes
 
 def parameter_object(cfg=None):
-
-    def got_config():
-        class ProcessingCfg(DataSet):
-            # Set the starting value with the config file if given
-            _dir = DirectoryItem("Shapefile Directory", cfg['user']['directory'])
-            out_suffix = StringItem("Smoothed files suffix", cfg['user']['out_suffix'])
-            out_dir = DirectoryItem("Output Directory", cfg['user']['out_dir'])
-            buf_val_array = FloatArrayItem("Buffer Values",
-                                           default=cfg['user']['buffer_value_array_km'],
-                                           help="Units [km]",
-                                           transpose=True)
-            n_procs = IntItem("Number of Processors", min=0, max=10, default=cfg['system']['n_procs'])
-
-        return ProcessingCfg()
-
-    def no_config():
-        class ProcessingNoCfg(DataSet):
-            start_dir = os.getcwd()
-            _dir = DirectoryItem("Shapefile Directory", start_dir)
-            out_suffix = StringItem("Smoothed files suffix", "_b{buf_val}km_sm.shp")
-            out_dir = DirectoryItem("Output Directory", start_dir)
-            buf_val_array = FloatArrayItem("Buffer Values",
-                                           default=np.array([10]),
-  #                                             default=np.array([1, 5, 10, 50, 100]),
-                                           help="Units [km]",
-                                           transpose=True)
-            n_procs = IntItem("Number of Processors", min=0, max=10, default=4)
-
-        return ProcessingNoCfg()
-
-    if cfg:
-        params = got_config()
+    if cfg is None:
+        _out_dir = _start_dir = os.getcwd()
+        _out_suffix = "_b{buf_val}km_sm.shp"
+        _buf_val_array = np.array([10])
+        _n_procs = 4
     else:
-        params = no_config()
-    return params
+        _start_dir = cfg['user']['directory']
+        _out_dir = cfg['user']['out_dir']
+        _out_suffix = cfg['user']['out_suffix']
+        _buf_val_array = cfg['user']['buffer_value_array_km']
+        _n_procs = cfg['system']['n_procs']
 
     class Processing(DataSet):
-        """Arc Smooth"""
-        # Set the starting value with the config file if given
-        if cfg:
-            _dir = DirectoryItem("Shapefile Directory", cfg['user']['directory'])
-            out_suffix = StringItem("Smoothed files suffix", cfg['user']['out_suffix'])
-            out_dir = DirectoryItem("Output Directory", cfg['user']['out_dir'])
-            buf_val_array = FloatArrayItem("Buffer Values",
-                                           default=cfg['user']['buffer_value_array_km'],
-                                           help="Units [km]",
-                                           transpose=True)
-            n_procs = IntItem("Number of Processors", min=0, max=10, default=cfg['system']['n_procs'])
-        else:
-            start_dir = os.getcwd()
-            _dir = DirectoryItem("Shapefile Directory", start_dir)
-            out_suffix = StringItem("Smoothed files suffix", "_b{buf_val}km_sm.shp")
-            out_dir = DirectoryItem("Output Directory", start_dir)
-            buf_val_array = FloatArrayItem("Buffer Values",
-                                           default=np.array([10]),
-      #                                             default=np.array([1, 5, 10, 50, 100]),
-                                           help="Units [km]",
-                                           transpose=True)
-            n_procs = IntItem("Number of Processors", min=0, max=10, default=4)
+        _dir = DirectoryItem("Shapefile Directory", _start_dir)
+        out_suffix = StringItem("Smoothed files suffix", _out_suffix)
+        out_dir = DirectoryItem("Output Directory", _out_dir)
+        buf_val_array = FloatArrayItem("Buffer Values",
+                                       default=_buf_val_array,
+  #                                             default=np.array([1, 5, 10, 50, 100]),
+                                       help="Units [km]",
+                                       transpose=True)
+        n_procs = IntItem("Number of Processors", min=0, max=10, default=_n_procs)
+
     return Processing()
+
+
+#    class Processing(DataSet):
+#        """Arc Smooth"""
+#        # Set the starting value with the config file if given
+#        if cfg:
+#            _dir = DirectoryItem("Shapefile Directory", cfg['user']['directory'])
+#            out_suffix = StringItem("Smoothed files suffix", cfg['user']['out_suffix'])
+#            out_dir = DirectoryItem("Output Directory", cfg['user']['out_dir'])
+#            buf_val_array = FloatArrayItem("Buffer Values",
+#                                           default=cfg['user']['buffer_value_array_km'],
+#                                           help="Units [km]",
+#                                           transpose=True)
+#            n_procs = IntItem("Number of Processors", min=0, max=10, default=cfg['system']['n_procs'])
+#        else:
+#            start_dir = os.getcwd()
+#            _dir = DirectoryItem("Shapefile Directory", start_dir)
+#            out_suffix = StringItem("Smoothed files suffix", "_b{buf_val}km_sm.shp")
+#            out_dir = DirectoryItem("Output Directory", start_dir)
+#            buf_val_array = FloatArrayItem("Buffer Values",
+#                                           default=np.array([10]),
+#      #                                             default=np.array([1, 5, 10, 50, 100]),
+#                                           help="Units [km]",
+#                                           transpose=True)
+#            n_procs = IntItem("Number of Processors", min=0, max=10, default=4)
+#    return Processing()
 
 class Processing2(dt.DataSet):
     """Example"""
