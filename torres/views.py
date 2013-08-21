@@ -30,7 +30,44 @@ debug, info, error = logging.debug, logging.info, logging.error
 ### Constants
 
 ### Classes
+
 def parameter_object(cfg=None):
+
+    def got_config():
+        class ProcessingCfg(DataSet):
+            # Set the starting value with the config file if given
+            _dir = DirectoryItem("Shapefile Directory", cfg['user']['directory'])
+            out_suffix = StringItem("Smoothed files suffix", cfg['user']['out_suffix'])
+            out_dir = DirectoryItem("Output Directory", cfg['user']['out_dir'])
+            buf_val_array = FloatArrayItem("Buffer Values",
+                                           default=cfg['user']['buffer_value_array_km'],
+                                           help="Units [km]",
+                                           transpose=True)
+            n_procs = IntItem("Number of Processors", min=0, max=10, default=cfg['system']['n_procs'])
+
+        return ProcessingCfg()
+
+    def no_config():
+        class ProcessingNoCfg(DataSet):
+            start_dir = os.getcwd()
+            _dir = DirectoryItem("Shapefile Directory", start_dir)
+            out_suffix = StringItem("Smoothed files suffix", "_b{buf_val}km_sm.shp")
+            out_dir = DirectoryItem("Output Directory", start_dir)
+            buf_val_array = FloatArrayItem("Buffer Values",
+                                           default=np.array([10]),
+  #                                             default=np.array([1, 5, 10, 50, 100]),
+                                           help="Units [km]",
+                                           transpose=True)
+            n_procs = IntItem("Number of Processors", min=0, max=10, default=4)
+
+        return ProcessingNoCfg()
+
+    if cfg:
+        params = got_config()
+    else:
+        params = no_config()
+    return params
+
     class Processing(DataSet):
         """Arc Smooth"""
         # Set the starting value with the config file if given
