@@ -10,13 +10,13 @@ with open('LICENSE') as f:
     license = f.read()
 
 setup(
-    name='sample',
+    name='torres',
     version='0.0.1',
-    description='Sample package for Python-Guide.org',
+    description='Manipulation and presentation of shapefiles and maps',
     long_description=readme,
-    author='Kenneth Reitz',
-    author_email='me@kennethreitz.com',
-    url='https://github.com/kennethreitz/samplemod',
+    author='Gavin Coombes',
+    author_email='gcoombes@apasa.com.au',
+    url='https://github.com/gjcoombes/torres.git',
     license=license,
     packages=find_packages(exclude=('tests', 'docs'))
 )
